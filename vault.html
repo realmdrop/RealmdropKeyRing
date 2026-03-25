@@ -2796,6 +2796,14 @@ kbd {
               <strong>Your data stays in this browser.</strong> KeyRing encrypts everything locally — no server, no cloud. Each browser profile has its own separate vault. Use <strong>Export</strong> regularly to back up your data, and to move it between browsers or devices.
             </div>
           </div>
+
+          <div class="home-section" style="text-align:center;padding-top:8px">
+            <button class="btn btn-sm" id="import-sample-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Import Sample Project
+            </button>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Loads "Realmdrop" with a "KeyRing" subproject, sample secrets, and a full brand kit</p>
+          </div>
         </div>
       </div>
       <div id="project-view" class="hidden"></div>
@@ -6532,6 +6540,161 @@ kbd {
     showCopyFeedback('Share created!');
   }
 
+  async function importSampleProject() {
+    // Check if sample already exists
+    if (vault.projects.find(p => p.name === 'Realmdrop' && p.parentId === null)) {
+      showCopyFeedback('Sample project already exists');
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const parentId = uid();
+    const childId = uid();
+
+    // Parent: Realmdrop (empty brand kit)
+    const realmdrop = {
+      id: parentId,
+      name: 'Realmdrop',
+      parentId: null,
+      color: '#2E1065',
+      avatar: null,
+      links: [
+        { id: uid(), label: 'Website', url: 'https://realmdrop.com', icon: 'link' },
+        { id: uid(), label: 'GitHub', url: 'https://github.com/realmdrop', icon: 'github' }
+      ],
+      branding: {
+        name: '', tagline: '', wordmarkNotes: '',
+        colors: [], typography: [],
+        logoSets: [], logoUsageRules: { minimumSize: '', clearSpace: '', do: [], doNot: [], backgroundGuidance: '', notes: '' },
+        logos: [],
+        voice: { keywords: [], avoid: [], toneNotes: '', positioning: '' },
+        subBrands: [], notes: ''
+      },
+      secrets: [
+        {
+          id: uid(), label: 'GitHub Personal Access Token', type: 'api_key',
+          value: 'ghp_sample1234567890abcdefghijklmnopqrst',
+          fields: { provider: 'GitHub' }, notes: 'Sample token — not real', tags: ['ci', 'deploy'],
+          history: [], rotateDue: null, createdAt: now, updatedAt: now
+        },
+        {
+          id: uid(), label: 'AWS Access Key', type: 'api_key',
+          value: 'AKIAIOSFODNN7EXAMPLE',
+          fields: { provider: 'AWS' }, notes: 'Sample AWS key — not real. Secret key below.', tags: ['aws', 'infra'],
+          history: [], rotateDue: null, createdAt: now, updatedAt: now
+        },
+        {
+          id: uid(), label: 'AWS Secret Key', type: 'password',
+          value: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          fields: {}, notes: 'Pair with AWS Access Key above', tags: ['aws', 'infra'],
+          history: [], rotateDue: null, createdAt: now, updatedAt: now
+        }
+      ]
+    };
+
+    // Child: KeyRing (full brand kit from keyring-brand.md)
+    const keyring = {
+      id: childId,
+      name: 'KeyRing',
+      parentId: parentId,
+      color: '#00FFB2',
+      avatar: null,
+      links: [],
+      branding: {
+        name: 'KeyRing',
+        tagline: 'Your keys. Your brands. One secure place.',
+        wordmarkNotes: "CamelCase — capital K, capital R. 'Ring' uses the primary color in light mode, mint accent in dark mode. Always accompanied by 'by Realmdrop' in uppercase label style below, 9px, letter-spacing 0.1em, 40% opacity. Logo mark: a ring with two keys — one pointing down, one pointing southeast at 45 degrees. Mint dot at ring center. Minimum mark size 20px.",
+        colors: [
+          { id: uid(), name: 'Deep Violet', hex: '#2E1065', role: 'primary', usage: 'Logo mark background, CTAs, primary actions — inherited from Realmdrop' },
+          { id: uid(), name: 'Mint', hex: '#00FFB2', role: 'accent', usage: "Ring center dot, active states, success signals, 'Ring' in dark mode wordmark" },
+          { id: uid(), name: 'Void', hex: '#12062E', role: 'dark-bg', usage: 'Primary dark mode background — inherited from Realmdrop' },
+          { id: uid(), name: 'Surface Dark', hex: '#1E0D45', role: 'surface-dark', usage: 'Dark mode card and panel background' },
+          { id: uid(), name: 'Violet Mist', hex: '#F9F7FF', role: 'light-bg', usage: 'Light mode page background — inherited from Realmdrop' },
+          { id: uid(), name: 'Violet Tint', hex: '#EDE8FF', role: 'custom', usage: "Badges, tags, surface highlights — e.g. 'Free' badge, project type pills" },
+          { id: uid(), name: 'KeyRing White', hex: '#f2f6fa', role: 'custom', usage: 'White' }
+        ],
+        typography: [
+          { id: uid(), role: 'Display', family: 'Inter', weight: '500', size: '28px', letterSpacing: '-0.03em', lineHeight: '1.1', usage: 'Hero headline on marketing site or onboarding screen' },
+          { id: uid(), role: 'Heading', family: 'Inter', weight: '500', size: '18px', letterSpacing: '-0.01em', lineHeight: '1.3', usage: 'Section headings and modal titles' },
+          { id: uid(), role: 'Body', family: 'Inter', weight: '400', size: '15px', letterSpacing: '0', lineHeight: '1.6', usage: 'Primary body copy and descriptions' },
+          { id: uid(), role: 'Body small', family: 'Inter', weight: '400', size: '13px', letterSpacing: '0', lineHeight: '1.55', usage: 'Secondary copy, tooltips, captions' },
+          { id: uid(), role: 'Label', family: 'Inter', weight: '500', size: '11px', letterSpacing: '0.09em', lineHeight: '1.4', usage: 'Uppercase section labels, category tags, keyboard shortcut hints' },
+          { id: uid(), role: 'Mono', family: 'JetBrains Mono', weight: '400', size: '13px', letterSpacing: '0', lineHeight: '1.5', usage: 'Secret values, hex codes, API keys, code in the vault UI' }
+        ],
+        logoSets: [],
+        logoUsageRules: {
+          minimumSize: '20px',
+          clearSpace: '50% of the mark\'s width on all sides',
+          do: [
+            'Always pair the wordmark with \'by Realmdrop\' attribution',
+            'Use the dark wordmark on dark backgrounds (#12062E and below)',
+            'Use the transparent mark when placing on custom colored surfaces',
+            'Maintain the mint dot (#00FFB2) at all times — never recolor it'
+          ],
+          doNot: [
+            'Do not recolor the mark — Deep Violet background, white strokes, mint dot only',
+            'Do not rotate or distort the mark',
+            'Do not display \'KeyRing\' wordmark without \'by Realmdrop\'',
+            'Do not use the mark below 20px',
+            'Do not use on backgrounds that clash with Deep Violet'
+          ],
+          backgroundGuidance: 'On Deep Violet (#2E1065): use the on-brand variant with rgba(255,255,255,0.12) tile. On light surfaces: use the default (violet square) or transparent mark. On dark surfaces: use default mark, dark wordmark.',
+          notes: ''
+        },
+        logos: [],
+        voice: {
+          keywords: ['Trustworthy', 'Clean', 'Modern', 'Calm', 'Capable', 'Organized'],
+          avoid: ['Alarming', 'Fear-based', 'Technical jargon', 'Paranoid', 'Corporate', 'Heavy-handed'],
+          toneNotes: 'KeyRing speaks like a calm, capable colleague who has everything organized. Not a compliance tool. Not a password nagger. It reassures without dramatizing. Security is the foundation, not the personality. The app feels like it just works — clean, fast, in control.',
+          positioning: 'KeyRing is the vault that professionals actually want to use. Free, forever. Built by Realmdrop for designers, developers, and freelancers who manage credentials and brand assets for clients.'
+        },
+        subBrands: [],
+        notes: 'KeyRing is a free product by Realmdrop Software. It inherits the full Realmdrop color system — Deep Violet & Mint — with no additional brand colors introduced. Target audience: designers, developers, freelancers, and agencies who manage secrets and brand kits across multiple client projects.'
+      },
+      secrets: [
+        {
+          id: uid(), label: 'Vercel Deploy Token', type: 'api_key',
+          value: 'vdp_sample_k8Tn2xR9mPqL4wYzA6bJcDfHgE1iO7sU',
+          fields: { provider: '' }, notes: 'Sample Vercel token — not real', tags: ['deploy'],
+          history: [], rotateDue: null, createdAt: now, updatedAt: now
+        },
+        {
+          id: uid(), label: 'Database Password (Staging)', type: 'password',
+          value: 'stg-Xk9$mP2!nR7qLwYz',
+          fields: { username: 'keyring_app', url: 'postgresql://staging.db.realmdrop.com:5432/keyring' },
+          notes: 'Staging database — rotated quarterly', tags: ['database', 'staging'],
+          history: [
+            { value: 'stg-OldPass2025!abc', changedAt: '2025-12-01T00:00:00.000Z', note: 'Quarterly rotation' }
+          ],
+          rotateDue: '2026-06-01T00:00:00.000Z',
+          createdAt: '2025-12-01T00:00:00.000Z', updatedAt: now
+        },
+        {
+          id: uid(), label: 'Stripe Secret Key', type: 'api_key',
+          value: 'sk_test_51Sample1234567890abcdefghijklmnop',
+          fields: { provider: 'Stripe' }, notes: 'Test mode key — not real', tags: ['payments'],
+          history: [], rotateDue: null, createdAt: now, updatedAt: now
+        },
+        {
+          id: uid(), label: 'JWT_SECRET', type: 'env_var',
+          value: 'eyJhbGciOiJIUzI1NiJ9.c2FtcGxlLXNlY3JldC1rZXk.SAMPLE',
+          fields: { varname: 'JWT_SECRET' }, notes: 'Used for session signing', tags: ['auth'],
+          history: [], rotateDue: null, createdAt: now, updatedAt: now
+        }
+      ]
+    };
+
+    vault.projects.push(realmdrop);
+    vault.projects.push(keyring);
+    await saveVault();
+    renderSidebar();
+    activeProjectId = childId;
+    activeTab = 'branding';
+    renderSidebar();
+    renderProject();
+    showCopyFeedback('Sample project imported!');
+  }
+
   async function importShare(data) {
     if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
       return new Promise(resolve => {
@@ -6648,6 +6811,7 @@ kbd {
     renderSidebar();
     showEmpty();
   });
+  $('import-sample-btn').addEventListener('click', importSampleProject);
   addProjectBtn.addEventListener('click', () => openProjectModal());
   projectModalCancel.addEventListener('click', closeProjectModal);
   projectModalSave.addEventListener('click', saveProject);

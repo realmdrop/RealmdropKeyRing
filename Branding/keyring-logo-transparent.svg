@@ -1,0 +1,15 @@
+<svg width="200" height="200" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+  <!-- Transparent background — strokes in Deep Violet for use on light surfaces -->
+  <!-- Ring -->
+  <circle cx="20" cy="18" r="6.5" stroke="#2E1065" stroke-width="2.5" fill="none"/>
+  <!-- Mint center dot -->
+  <circle cx="20" cy="18" r="2.5" fill="#00FFB2"/>
+  <!-- Key 1 — South -->
+  <line x1="20" y1="24.5" x2="20" y2="36" stroke="#2E1065" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="17.5" y1="29.5" x2="20" y2="29.5" stroke="#2E1065" stroke-width="2" stroke-linecap="round"/>
+  <line x1="17.5" y1="33" x2="22.5" y2="33" stroke="#2E1065" stroke-width="2" stroke-linecap="round"/>
+  <!-- Key 2 — Southeast -->
+  <line x1="24.6" y1="22.6" x2="33.5" y2="31.5" stroke="#2E1065" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="25.8" y1="27.2" x2="28.6" y2="24.4" stroke="#2E1065" stroke-width="2" stroke-linecap="round"/>
+  <line x1="30" y1="31.5" x2="32.8" y2="28.7" stroke="#2E1065" stroke-width="2" stroke-linecap="round"/>
+</svg>

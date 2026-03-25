@@ -1,0 +1,13 @@
+{
+  "name": "KeyRing by Realmdrop",
+  "short_name": "KeyRing",
+  "description": "Your keys. Your brands. One secure place.",
+  "start_url": "/vault.html",
+  "display": "standalone",
+  "background_color": "#12062E",
+  "theme_color": "#12062E",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Claude Code local config — machine-specific, never commit
+.claude/
+
+# Affinity Designer source files and lock files
+*.af
+*.af~lock~
+Branding/*.afdesign
+
+# Local environment / secrets — just in case
+.env
+.env.local
+*.key
+*.pem

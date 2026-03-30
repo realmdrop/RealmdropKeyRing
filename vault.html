@@ -5625,14 +5625,23 @@ kbd {
         { label: 'YAML', value: `${varName}: "${s.value.replace(/"/g, '\\"')}"` },
       ];
 
+      const masked = '\u2022'.repeat(8);
       const dropdown = document.createElement('div');
       dropdown.className = 'copy-dropdown';
-      dropdown.innerHTML = formats.map(f =>
-        `<div class="copy-dropdown-item" data-value="${esc(f.value)}">
+      dropdown.innerHTML = formats.map(f => {
+        // Show format structure but mask the secret value
+        const preview = f.label === 'Raw value' ? masked
+          : f.label === '.env format' ? `${varName}=${masked}`
+          : f.label === 'Shell export' ? `export ${varName}=${masked}`
+          : f.label === 'Docker env flag' ? `-e ${varName}=${masked}`
+          : f.label === 'CLI flag' ? `--${kebab}=${masked}`
+          : f.label === 'JSON' ? `"${varName}": "${masked}"`
+          : `${varName}: "${masked}"`;
+        return `<div class="copy-dropdown-item" data-value="${esc(f.value)}">
           <span class="copy-fmt-label">${f.label}</span>
-          <span class="copy-fmt-preview">${esc(f.value.slice(0, 40))}</span>
-        </div>`
-      ).join('');
+          <span class="copy-fmt-preview">${esc(preview)}</span>
+        </div>`;
+      }).join('');
 
       dropdown.querySelectorAll('.copy-dropdown-item').forEach(item => {
         item.addEventListener('click', (ev) => {
@@ -6671,7 +6680,7 @@ kbd {
         },
         {
           id: uid(), label: 'Stripe Secret Key', type: 'api_key',
-          value: 'sk_test_51Sample1234567890abcdefghijklmnop',
+          value: 'sk_sample_51Fake1234567890abcdefghijklmnop',
           fields: { provider: 'Stripe' }, notes: 'Test mode key — not real', tags: ['payments'],
           history: [], rotateDue: null, createdAt: now, updatedAt: now
         },

@@ -2798,11 +2798,17 @@ kbd {
           </div>
 
           <div class="home-section" style="text-align:center;padding-top:8px">
-            <button class="btn btn-sm" id="import-sample-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Import Sample Project
-            </button>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Loads "Realmdrop" with a "KeyRing" subproject, sample secrets, and a full brand kit</p>
+            <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+              <button class="btn btn-sm" id="import-sample-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Import Sample Project
+              </button>
+              <button class="btn btn-sm btn-primary" id="download-backup-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Backup
+              </button>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Import a sample project to explore, or download a backup of your vault</p>
           </div>
         </div>
       </div>
@@ -3026,6 +3032,43 @@ kbd {
   </div>
 </div>
 
+<!-- Backup Modal -->
+<div class="modal-overlay" id="backup-modal">
+  <div class="modal" style="width:420px">
+    <h2>Download Backup</h2>
+    <div class="form-group">
+      <label>Verify Master Password</label>
+      <input type="password" id="backup-pw-input" placeholder="Enter your master password">
+    </div>
+    <div class="form-group">
+      <label>Backup Type</label>
+      <div id="backup-type-options">
+        <div class="export-option selected" data-mode="encrypted">
+          <input type="radio" name="backup-mode" value="encrypted" checked>
+          <div class="export-option-text">
+            <h4>Encrypted (recommended)</h4>
+            <p>Protected with AES-256. You'll need your master password to restore it.</p>
+          </div>
+        </div>
+        <div class="export-option" data-mode="plaintext">
+          <input type="radio" name="backup-mode" value="plaintext">
+          <div class="export-option-text">
+            <h4>Unencrypted</h4>
+            <p>Plain JSON file. Anyone with the file can read all your secrets.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="backup-warning" class="warning-box hidden">
+      This backup will contain all your secrets in plaintext. Store it securely and delete it when no longer needed.
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="backup-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="backup-modal-save">Download</button>
+    </div>
+  </div>
+</div>
+
 <!-- Logo Name Modal -->
 <div class="modal-overlay" id="logo-name-modal">
   <div class="modal" style="width:380px">
@@ -3147,6 +3190,19 @@ kbd {
           <option value="120">2 minutes</option>
           <option value="0">Never clear</option>
         </select>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Data</div>
+      <div class="settings-row">
+        <div class="settings-label-group">
+          <div class="settings-label">Download a backup</div>
+          <div class="settings-desc">Save an encrypted or unencrypted copy of your entire vault. Requires master password verification.</div>
+        </div>
+        <button class="btn btn-sm" id="settings-backup-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Backup
+        </button>
       </div>
     </div>
     <div class="modal-actions">
@@ -3439,6 +3495,7 @@ kbd {
         br.logos.forEach(l => { if (!l.variant) l.variant = 'default'; });
         p.secrets.forEach(s => {
           if (!s.history) s.history = [];
+          if (s.tags) s.tags = [...s.tags]; // ensure no shared array refs
           if (!('rotateDue' in s)) s.rotateDue = null;
         });
       });
@@ -4503,6 +4560,14 @@ kbd {
       <div id="tab-branding" class="${activeTab !== 'branding' ? 'hidden' : ''}"></div>
     `;
 
+    // Sort: by first tag alphabetically, then by label
+    filteredSecrets.sort((a, b) => {
+      const tagA = (a.tags && a.tags.length) ? a.tags[0].toLowerCase() : '\uffff';
+      const tagB = (b.tags && b.tags.length) ? b.tags[0].toLowerCase() : '\uffff';
+      if (tagA !== tagB) return tagA.localeCompare(tagB);
+      return a.label.toLowerCase().localeCompare(b.label.toLowerCase());
+    });
+
     if (filteredSecrets.length === 0) {
       document.getElementById('secrets-grid').innerHTML = `
         <div class="empty-state" style="grid-column:1/-1;padding:60px 0">
@@ -4771,7 +4836,13 @@ kbd {
 
       <!-- Logo Sets -->
       <div class="brand-section">
-        <div class="brand-section-header"><h3>Logo Sets</h3></div>
+        <div class="brand-section-header">
+          <h3>Logo Sets</h3>
+          <button class="btn btn-sm" id="brand-download-all-logos" title="Download all logos">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download All
+          </button>
+        </div>
         <div id="brand-logo-sets">
           ${(b.logoSets || []).map(set => `
             <div class="brand-logo-set" data-set-id="${set.id}">
@@ -4790,6 +4861,7 @@ kbd {
                     </button>
                     ${f.dataUrl ? `<img class="brand-logo-set-thumb" src="${esc(f.dataUrl)}" alt="${esc(f.label || f.variant)}">` : `<div class="brand-logo-set-thumb" style="display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-muted)" title="${esc(f.filePath || '')}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>`}
                     ${f.filePath && !f.dataUrl ? `<span class="brand-logo-set-filepath" title="${esc(f.filePath)}">${esc(f.filePath.split('/').pop())}</span>` : ''}
+                    ${f.dataUrl ? `<button class="btn-icon brand-logo-download" data-file-id="${f.id}" data-set-id="${set.id}" title="Download"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>` : ''}
                     <select class="brand-logo-set-variant-sel" data-file-id="${f.id}" data-set-id="${set.id}">
                       ${Object.entries(VARIANT_LABELS).map(([val, label]) => `<option value="${val}" ${f.variant === val ? 'selected' : ''}>${label}</option>`).join('')}
                     </select>
@@ -5106,6 +5178,50 @@ kbd {
         }
       });
     });
+
+    // Download individual logo file
+    container.querySelectorAll('.brand-logo-download').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const set = (b.logoSets || []).find(s => s.id === btn.dataset.setId);
+        if (!set) return;
+        const f = set.files.find(f => f.id === btn.dataset.fileId);
+        if (!f || !f.dataUrl) return;
+        const filename = (f.label || f.variant || 'logo').replace(/[^a-zA-Z0-9\-_ ]/g, '');
+        const ext = f.dataUrl.startsWith('data:image/svg') ? '.svg' : f.dataUrl.startsWith('data:image/png') ? '.png' : f.dataUrl.startsWith('data:image/jpeg') ? '.jpg' : '.img';
+        const a = document.createElement('a');
+        a.href = f.dataUrl;
+        a.download = filename + ext;
+        a.click();
+      });
+    });
+
+    // Download all logos
+    const dlAllBtn = $('brand-download-all-logos');
+    if (dlAllBtn) {
+      dlAllBtn.addEventListener('click', () => {
+        const allFiles = [];
+        (b.logoSets || []).forEach(set => {
+          (set.files || []).forEach(f => {
+            if (f.dataUrl) allFiles.push({ setName: set.name, file: f });
+          });
+        });
+        if (allFiles.length === 0) { showCopyFeedback('No logos to download'); return; }
+        allFiles.forEach((item, i) => {
+          setTimeout(() => {
+            const f = item.file;
+            const prefix = labelToKebab(item.setName);
+            const filename = (f.label || f.variant || 'logo').replace(/[^a-zA-Z0-9\-_ ]/g, '');
+            const ext = f.dataUrl.startsWith('data:image/svg') ? '.svg' : f.dataUrl.startsWith('data:image/png') ? '.png' : f.dataUrl.startsWith('data:image/jpeg') ? '.jpg' : '.img';
+            const a = document.createElement('a');
+            a.href = f.dataUrl;
+            a.download = prefix + '-' + filename + ext;
+            a.click();
+          }, i * 300);
+        });
+        showCopyFeedback(`Downloading ${allFiles.length} logo${allFiles.length > 1 ? 's' : ''}...`);
+      });
+    }
 
     // Logo Usage Rules: events
     ['brand-lur-minsize','brand-lur-clearspace','brand-lur-bgguide','brand-lur-notes'].forEach(id => {
@@ -6238,6 +6354,42 @@ kbd {
           return;
         }
 
+        // Handle keyring-backup files (full vault restore)
+        if (data.format === 'keyring-backup') {
+          const masterPw = await verifyMasterPassword('Confirm your master password to restore this backup.');
+          if (!masterPw) return;
+
+          if (data.encrypted) {
+            try {
+              const backupSalt = new Uint8Array(data.salt);
+              const backupKey = await deriveKey(masterPw, backupSalt);
+              const restored = await decryptData(backupKey, { iv: data.iv, ct: data.ct });
+              confirmDialog('Restore backup?', 'This will replace your entire vault with the backup contents. This cannot be undone.', async () => {
+                vault = restored;
+                if (!vault.version) vault.version = 2;
+                await saveVault();
+                renderSidebar();
+                activeProjectId = null;
+                showEmpty();
+                showCopyFeedback('Backup restored!');
+              }, 'Restore');
+            } catch {
+              await showAlert('Restore failed', 'Wrong password or corrupted backup file.');
+            }
+          } else if (data.vault) {
+            confirmDialog('Restore backup?', 'This will replace your entire vault with the backup contents. This cannot be undone.', async () => {
+              vault = data.vault;
+              if (!vault.version) vault.version = 2;
+              await saveVault();
+              renderSidebar();
+              activeProjectId = null;
+              showEmpty();
+              showCopyFeedback('Backup restored!');
+            }, 'Restore');
+          }
+          return;
+        }
+
         // All imports require master password confirmation
         const masterPw = await verifyMasterPassword('Confirm your master password to import.');
         if (!masterPw) { await showAlert('Import cancelled', 'Master password verification failed.'); return; }
@@ -6320,7 +6472,7 @@ kbd {
             validSecrets.forEach(is => {
               const existingSecret = existing.secrets.find(s => s.label === is.label);
               if (existingSecret) {
-                Object.assign(existingSecret, is, { id: existingSecret.id });
+                Object.assign(existingSecret, is, { id: existingSecret.id, tags: [...(is.tags || [])], history: [...(is.history || [])], fields: { ...(is.fields || {}) } });
               } else {
                 is.id = is.id || uid();
                 if (!is.history) is.history = [];
@@ -6520,7 +6672,7 @@ kbd {
 
     const selectedSecrets = project.secrets
       .filter(s => checkedIds.has(s.id))
-      .map(s => ({ label: s.label, type: s.type, value: s.value, notes: s.notes, tags: s.tags }));
+      .map(s => ({ label: s.label, type: s.type, value: s.value, notes: s.notes, tags: [...(s.tags || [])] }));
 
     if (selectedSecrets.length === 0) { await showAlert('No secrets selected', 'Select at least one secret to share.'); return; }
 
@@ -6763,7 +6915,7 @@ kbd {
           type: s.type,
           value: s.value,
           notes: s.notes || '',
-          tags: s.tags || [],
+          tags: [...(s.tags || [])],
           fields: {},
           history: [],
           createdAt: now,
@@ -6821,6 +6973,89 @@ kbd {
     showEmpty();
   });
   $('import-sample-btn').addEventListener('click', importSampleProject);
+
+  // Backup modal
+  const backupModal = $('backup-modal');
+  $('download-backup-btn').addEventListener('click', () => {
+    $('backup-pw-input').value = '';
+    $('backup-warning').classList.add('hidden');
+    backupModal.querySelectorAll('.export-option').forEach((o, i) => {
+      o.classList.toggle('selected', i === 0);
+      o.querySelector('input[type="radio"]').checked = (i === 0);
+    });
+    backupModal.classList.add('open');
+    setTimeout(() => $('backup-pw-input').focus(), 100);
+  });
+  $('backup-modal-cancel').addEventListener('click', () => backupModal.classList.remove('open'));
+  backupModal.addEventListener('click', (e) => { if (e.target === backupModal) backupModal.classList.remove('open'); });
+  backupModal.querySelectorAll('.export-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      backupModal.querySelectorAll('.export-option').forEach(o => {
+        o.classList.remove('selected');
+        o.querySelector('input[type="radio"]').checked = false;
+      });
+      opt.classList.add('selected');
+      opt.querySelector('input[type="radio"]').checked = true;
+      $('backup-warning').classList.toggle('hidden', opt.dataset.mode !== 'plaintext');
+    });
+  });
+  $('backup-modal-save').addEventListener('click', async () => {
+    const pw = $('backup-pw-input').value;
+    if (!pw) { $('backup-pw-input').style.borderColor = 'var(--danger)'; return; }
+    $('backup-pw-input').style.borderColor = '';
+
+    // Verify master password by attempting to decrypt the verify token
+    const saltData = lsGet('salt');
+    if (!saltData) { return; }
+    const testKey = await deriveKey(pw, new Uint8Array(saltData));
+    try {
+      const verifyData = lsGet('verify');
+      if (verifyData) {
+        const result = await decryptRaw(testKey, verifyData);
+        if (result !== VERIFY_TOKEN) throw new Error('wrong');
+      } else {
+        // Fallback: try decrypting vault data
+        await decryptData(testKey, lsGet('data'));
+      }
+    } catch {
+      $('backup-pw-input').value = '';
+      $('backup-pw-input').style.borderColor = 'var(--danger)';
+      showCopyFeedback('Wrong password');
+      return;
+    }
+
+    const mode = backupModal.querySelector('input[name="backup-mode"]:checked')?.value || 'encrypted';
+    const dateStr = new Date().toISOString().slice(0, 10);
+
+    if (mode === 'encrypted') {
+      const encrypted = await encryptData(cryptoKey, vault);
+      const data = JSON.stringify({
+        format: 'keyring-backup',
+        version: 2,
+        encrypted: true,
+        createdAt: new Date().toISOString(),
+        salt: Array.from(salt),
+        iv: encrypted.iv,
+        ct: encrypted.ct
+      }, null, 2);
+      downloadFile(data, `keyring-backup-${dateStr}.json`, 'application/json');
+    } else {
+      const data = JSON.stringify({
+        format: 'keyring-backup',
+        version: 2,
+        encrypted: false,
+        createdAt: new Date().toISOString(),
+        vault: vault
+      }, null, 2);
+      downloadFile(data, `keyring-backup-${dateStr}.json`, 'application/json');
+    }
+
+    backupModal.classList.remove('open');
+    showCopyFeedback('Backup downloaded!');
+  });
+  $('backup-pw-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('backup-modal-save').click();
+  });
   addProjectBtn.addEventListener('click', () => openProjectModal());
   projectModalCancel.addEventListener('click', closeProjectModal);
   projectModalSave.addEventListener('click', saveProject);
@@ -6949,6 +7184,10 @@ kbd {
 
   $('settings-btn').addEventListener('click', openSettingsModal);
   $('settings-modal-close').addEventListener('click', closeSettingsModal);
+  $('settings-backup-btn').addEventListener('click', () => {
+    closeSettingsModal();
+    $('download-backup-btn').click();
+  });
   settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettingsModal(); });
 
   $('setting-lock-timeout').addEventListener('change', (e) => {
@@ -7043,6 +7282,7 @@ kbd {
       if (linkModal.classList.contains('open')) { closeLinkModal(); return; }
       if (typoModal.classList.contains('open')) { typoModal.classList.remove('open'); return; }
       if (logoNameModal.classList.contains('open')) { logoNameModal.classList.remove('open'); return; }
+      if (backupModal.classList.contains('open')) { backupModal.classList.remove('open'); return; }
       const confirms = document.querySelectorAll('.confirm-overlay');
       if (confirms.length) { confirms.forEach(c => c.remove()); return; }
 
